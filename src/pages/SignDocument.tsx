@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'; // Import useSearchParams
 import { supabase } from '../lib/supabase';
 import { PDFViewer } from '../components/PDFViewer';
 import { SignatureCanvas } from '../components/SignatureCanvas';
@@ -152,6 +152,8 @@ export const SignDocument: React.FC = () => {
   const pdfViewerRef = useRef<any>(null);
     const [signedDocument, setSignedDocument] = useState<any | null>(null); //using any temporarily
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const [searchParams] = useSearchParams(); // Get query parameters
+    const isSigningMode = searchParams.get('mode') === 'sign';
 
 
     useEffect(() => {
@@ -331,6 +333,21 @@ export const SignDocument: React.FC = () => {
     }, [templateId]);
 
 
+    if (isMobile && isSigningMode) {
+        return (
+          <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-4">
+            <h2 className="text-lg font-semibold mb-4">Add Your Signature</h2>
+            <SignatureCanvas onSave={handleSignatureSave} onCancel={() => navigate(`/sign/${templateId}`)} width={window.innerWidth * 0.8} height={300} />
+            <button
+                onClick={() => navigate(`/sign/${templateId}`)}
+                className="mt-4 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+            >
+                Back
+            </button>
+          </div>
+        );
+    }
+
   if (!template || !pdfUrl) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -347,15 +364,6 @@ export const SignDocument: React.FC = () => {
         ) : (
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         )}
-      </div>
-    );
-  }
-
-    if (isMobile && showSignaturePad && activeField) {
-    return (
-      <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-4">
-        <h2 className="text-lg font-semibold mb-4">Add Your Signature</h2>
-        <SignatureCanvas onSave={handleSignatureSave} onCancel={handleCancelSignature} width={window.innerWidth * 0.8} height={300} />
       </div>
     );
   }
@@ -529,7 +537,7 @@ export const SignDocument: React.FC = () => {
                 <div className="bg-white rounded-lg p-6 max-w-sm w-full shadow-xl">
                   <h4 className="text-center text-gray-700 mb-4">Scan to Sign</h4>
                   <div className="flex justify-center">
-                    <QRCode value={`https://dmdsignhere.netlify.app/sign/${templateId}/complete`} size={192} level="H" />
+                    <QRCode value={`https://dmdsignhere.netlify.app/sign/${templateId}/complete?mode=sign`} size={192} level="H" />
                   </div>
                   <button
                     onClick={() => {
