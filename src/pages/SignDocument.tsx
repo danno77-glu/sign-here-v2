@@ -202,13 +202,19 @@ export const SignDocument: React.FC = () => {
   };
 
     const handleFieldClick = (field: FormField, event: React.MouseEvent) => {
-    if (field.type === 'signature') {
-      setActiveField(field.label);
-      setShowSignaturePad(false);
-      setShowQRCode(false);
-      setCurrentPage(field.position.pageNumber);
-    }
-  };
+        if (field.type === 'signature') {
+            setActiveField(field.label);
+            // Only show the signature pad if on mobile, otherwise, proceed as before
+            if (isMobile) {
+                setShowSignaturePad(true);
+                setShowQRCode(false);
+            } else {
+                setShowSignaturePad(false);
+                setShowQRCode(false);
+            }
+            setCurrentPage(field.position.pageNumber);
+        }
+    };
 
   const handleSignatureSave = (signatureData: string) => {
     setFormValues(prev => ({
@@ -345,6 +351,15 @@ export const SignDocument: React.FC = () => {
     );
   }
 
+    if (isMobile && showSignaturePad && activeField) {
+    return (
+      <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-4">
+        <h2 className="text-lg font-semibold mb-4">Add Your Signature</h2>
+        <SignatureCanvas onSave={handleSignatureSave} onCancel={handleCancelSignature} width={window.innerWidth * 0.8} height={300} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
@@ -423,7 +438,7 @@ export const SignDocument: React.FC = () => {
                         {field.type === 'signature' ? (
                           <>
                             {/* Show options only when the field is active */}
-                            {activeField === field.label && !showSignaturePad && !showQRCode && (
+                            {activeField === field.label && !showSignaturePad && !showQRCode && !isMobile && (
                                 <div className="flex space-x-2">
                                 <button
                                     onClick={() => setShowSignaturePad(true)}
@@ -498,8 +513,8 @@ export const SignDocument: React.FC = () => {
               </div>
             </div>
 
-            {/* Signature Pad Modal */}
-            {showSignaturePad && activeField && (
+            {/* Signature Pad Modal (Desktop - Always Visible when triggered)*/}
+            {showSignaturePad && activeField && !isMobile && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                 <div className="bg-white rounded-lg p-6 max-w-2xl w-full shadow-xl">
                   <h2 className="text-lg font-semibold mb-4">Add Your Signature</h2>
